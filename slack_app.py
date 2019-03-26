@@ -63,7 +63,6 @@ def post_initial_message():
       text="Dearest hungry Raveliners, raise thy hand for lunch!",
       channel=general_ID
     )
-    pp.pprint(res)
     timestamp = res['message']['ts']
     return timestamp
 
