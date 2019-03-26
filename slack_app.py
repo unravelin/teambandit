@@ -1,5 +1,4 @@
 import os
-import pprint
 from slackclient import SlackClient
 import time
 from random import shuffle
@@ -14,8 +13,6 @@ slack_token = os.environ["SLACK_API_TOKEN"]
 
 sc = SlackClient(slack_token)
 
-pp = pprint.PrettyPrinter(indent=2)
-
 general_ID="C5G0X66A0"
 
 teamSize = 5 # should be 5
@@ -26,13 +23,11 @@ lunchers = []
 
 stringTeamList = ""
 
-@app.route("/")
-def hello():
-    return "Hello World!"
-
 @app.route('/teambandit', methods=['POST'])
 def teambandit():
+    print('BEFORE_REQ_DATA')
     print(request.data)
+    print('AFTER_REQ_DATA')
     thread1 = threading.Thread(target=launch_team_bandit)
     thread1.start()
     
@@ -54,7 +49,7 @@ def webhook():
 def launch_team_bandit():
     timestamp = post_initial_message()
     print(timestamp)
-    time.sleep(5)
+    time.sleep(10)
     global lunchers
     global teamMessageTime
     lunchers = get_lunchers(timestamp)
