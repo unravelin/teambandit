@@ -17,6 +17,8 @@ channel_ID=""
 
 teamSize = 5 # should be 5
 
+SLEEP_TIME = 10
+
 teamMessageTime = 0
 
 lunchers = []
@@ -41,18 +43,16 @@ def webhook():
     if (payload['actions'][0].get('action_id') == 'finalise'):
         update_message("Teams finalised! Bon apetit :shallow_pan_of_food:", teamMessageTime)
     if (payload['actions'][0].get('action_id') == 'regenerate'):
-        print(teamMessageTime)
-        generate_teams(lunchers, teamSize)
+        teamMessageTime = generate_teams(lunchers, teamSize)
     return Response(status=200) 
 
 def launch_team_bandit():
     timestamp = post_initial_message()
-    print(timestamp)
-    time.sleep(10)
+    time.sleep(SLEEP_TIME) # sleeps for SLEEP_TIME seconds
     global lunchers
     global teamMessageTime
-    lunchers = get_lunchers(timestamp)
-    teamMessageTime = generate_teams(lunchers, teamSize)
+    lunchers = get_lunchers(timestamp) # get the list of lunchers that reacted to the post at timestamp
+    teamMessageTime = generate_teams(lunchers, teamSize) # Print the teams, and return the time - updating the global teamMessageTime variable
 
 
 
@@ -66,8 +66,6 @@ def post_initial_message():
     return timestamp
 
 def update_message(message, time):
-    print("In update message!")
-    print(teamMessageTime)
     global stringTeamList
     jsonList = [{
             "type": "section",
@@ -89,7 +87,6 @@ def update_message(message, time):
       channel=channel_ID,
       blocks=json.dumps(jsonList)
     )
-    print(res)
 
 def get_lunchers(messageTime):
     reactions = sc.api_call(
@@ -98,7 +95,6 @@ def get_lunchers(messageTime):
        channel=channel_ID,
        full=1
      )
-    print(reactions)
 
     try:
         reactArray = reactions['message']['reactions']
@@ -106,7 +102,6 @@ def get_lunchers(messageTime):
         print ('sorry, no lunch')
         return []
 
-    print(reactions)
 
     users = []
 
@@ -119,9 +114,6 @@ def get_lunchers(messageTime):
         for elem in row:
             usersNoMatrix.append(elem)
 
-    print(list(set(usersNoMatrix)))
-
-    #de-dupe the list
     return list(set(usersNoMatrix))
 
 
