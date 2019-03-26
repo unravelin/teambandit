@@ -7,7 +7,6 @@ import json
 from flask import Flask, request, Response
 import math
 import threading
-from multiprocessing import Process
 
 app = Flask(__name__)
 
