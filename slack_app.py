@@ -28,6 +28,8 @@ stringTeamList = ""
 @app.route('/teambandit', methods=['POST'])
 def teambandit():
     global channel_ID
+    global teamMessageTime
+    teamMessageTime = 0
     channel_ID = request.form['channel_id']
     thread1 = threading.Thread(target=launch_team_bandit)
     thread1.start()
