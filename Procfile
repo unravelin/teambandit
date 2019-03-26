@@ -1,1 +1,1 @@
-web: gunicorn slack_app:app
+web: python slack_app:app $PORT
