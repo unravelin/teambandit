@@ -1,1 +1,1 @@
-web: python slack_app:app $PORT
+web: python slack_app.py
