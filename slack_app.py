@@ -24,6 +24,8 @@ teamMessageTime = 0
 
 lunchers = []
 
+stringTeamList = ""
+
 
 @app.route('/teambandit', methods=['POST'])
 def teambandit():
@@ -40,7 +42,7 @@ def webhook():
     global teamMessageTime
     payload = json.loads(request.form["payload"])
     if (payload['actions'][0].get('action_id') == 'finalise'):
-        update_message("Teams finalised! Bon apetit :)", teamMessageTime)
+        update_message("Teams finalised! Bon apetit :shallow_pan_of_food:", teamMessageTime)
     if (payload['actions'][0].get('action_id') == 'regenerate'):
         print(teamMessageTime)
         generate_teams(lunchers, teamSize)
@@ -70,11 +72,26 @@ def post_initial_message():
 def update_message(message, time):
     print("In update message!")
     print(teamMessageTime)
+    global stringTeamList
+    jsonList = [{
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "text": "Teams are as follows:"  + ", ".join(stringTeamList)
+            }
+        },
+        {
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "text": ""  + message
+            }
+        }]
     res = sc.api_call(
       "chat.update",
-      text=message,
       ts = time,
-      channel=general_ID
+      channel=general_ID,
+      blocks=json.dumps(jsonList)
     )
     print(res)
 
@@ -124,6 +141,8 @@ def generate_teams(uniqueUserList, teamSize):
     # teamList = samsSolution(name_list, teamSize)
     teamList = astridsSolution(name_list, teamSize)
     
+    global stringTeamList
+
     stringTeamList = [str(teams) for teams in teamList]
 
     jsonList = [{
@@ -166,13 +185,25 @@ def generate_teams(uniqueUserList, teamSize):
             }
         }]
 
-    res = sc.api_call(
-      "chat.postMessage",
-      channel=general_ID,
-      blocks=json.dumps(jsonList)
-    )
-    timestamp = res['message']['ts']
-    return(timestamp)
+    if (teamMessageTime == 0):
+        res = sc.api_call(
+          "chat.postMessage",
+          channel=general_ID,
+          blocks=json.dumps(jsonList)
+        )
+        timestamp = res['message']['ts']
+        return(timestamp)
+    else:
+        res = sc.api_call(
+          "chat.update",
+          channel=general_ID,
+          ts = teamMessageTime,
+          blocks=json.dumps(jsonList)
+        )
+        print("returning here")
+        print(res)
+        timestamp = res['ts']
+        return(timestamp)
 
 
 def samsSolution(userList, teamSize):
