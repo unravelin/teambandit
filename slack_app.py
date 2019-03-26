@@ -60,7 +60,7 @@ def post_initial_message():
     res = sc.api_call(
       "chat.postMessage",
       text="Dearest hungry Raveliners, raise thy hand for lunch!",
-      channel=general_ID
+      channel=channel_ID
     )
     timestamp = res['message']['ts']
     return timestamp
@@ -86,7 +86,7 @@ def update_message(message, time):
     res = sc.api_call(
       "chat.update",
       ts = time,
-      channel=general_ID,
+      channel=channel_ID,
       blocks=json.dumps(jsonList)
     )
     print(res)
@@ -95,7 +95,7 @@ def get_lunchers(messageTime):
     reactions = sc.api_call(
        "reactions.get",
        timestamp=messageTime,
-       channel=general_ID,
+       channel=channel_ID,
        full=1
      )
     print(reactions)
@@ -184,7 +184,7 @@ def generate_teams(uniqueUserList, teamSize):
     if (teamMessageTime == 0):
         res = sc.api_call(
           "chat.postMessage",
-          channel=general_ID,
+          channel=channel_ID,
           blocks=json.dumps(jsonList)
         )
         timestamp = res['message']['ts']
@@ -192,7 +192,7 @@ def generate_teams(uniqueUserList, teamSize):
     else:
         res = sc.api_call(
           "chat.update",
-          channel=general_ID,
+          channel=channel_ID,
           ts = teamMessageTime,
           blocks=json.dumps(jsonList)
         )
@@ -313,7 +313,7 @@ def astridTestsThings():
         })
     res = sc.api_call(
       "chat.postMessage",
-      channel=general_ID,
+      channel=channel_ID,
       blocks=json.dumps(teamsObjects)
     )
 
