@@ -121,6 +121,9 @@ def generate_teams(uniqueUserList, teamSize):
     #randomize the list
     shuffle(uniqueUserList)
 
+    global teamMessageTime
+    global stringTeamList
+
     name_list = []
     # turn userID list into a list of names
     for user_ID in uniqueUserList:
@@ -128,8 +131,6 @@ def generate_teams(uniqueUserList, teamSize):
 
     # teamList = samsSolution(name_list, teamSize)
     teamList = astridsSolution(name_list, teamSize)
-    
-    global stringTeamList
 
     stringTeamList = [str(teams) for teams in teamList]
 
@@ -188,8 +189,6 @@ def generate_teams(uniqueUserList, teamSize):
           ts = teamMessageTime,
           blocks=json.dumps(jsonList)
         )
-        print("returning here")
-        print(res)
         timestamp = res['ts']
         return(timestamp)
 
@@ -220,8 +219,6 @@ def samsSolution(userList, teamSize):
                     overflowCount -= 1 
             teamList[teamCount][positionInTeamCount] = user # insert into the team list matrix
             positionInTeamCount += 1 # increment the position in team count to insert the next user in the right slot
-
-        print (teamList)
 
         return teamList
 
@@ -271,8 +268,6 @@ def astridsSolution(group_list, team_size):
                 teams.append(team)
                 j += team_size-1
             
-        print(teams)
-
         return teams
 
 def get_name_from_userid(userID):
