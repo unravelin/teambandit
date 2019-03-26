@@ -26,7 +26,7 @@ stringTeamList = ""
 @app.route('/teambandit', methods=['POST'])
 def teambandit():
     print('BEFORE_REQ_DATA')
-    print(request.data)
+    print(request.form)
     print('AFTER_REQ_DATA')
     thread1 = threading.Thread(target=launch_team_bandit)
     thread1.start()
