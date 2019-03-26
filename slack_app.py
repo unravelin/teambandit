@@ -13,7 +13,7 @@ slack_token = os.environ["SLACK_API_TOKEN"]
 
 sc = SlackClient(slack_token)
 
-general_ID="C5G0X66A0"
+channel_ID=""
 
 teamSize = 5 # should be 5
 
@@ -25,9 +25,8 @@ stringTeamList = ""
 
 @app.route('/teambandit', methods=['POST'])
 def teambandit():
-    print('BEFORE_REQ_DATA')
-    print(request.form['channel_id'])
-    print('AFTER_REQ_DATA')
+    global channel_ID
+    channel_ID = request.form['channel_id']
     thread1 = threading.Thread(target=launch_team_bandit)
     thread1.start()
     
