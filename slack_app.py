@@ -50,7 +50,13 @@ def webhook():
 
 def launch_team_bandit():
     timestamp = post_initial_message()
-    time.sleep(SLEEP_TIME) # sleeps for SLEEP_TIME seconds
+    time.sleep(SLEEP_TIME/2) # sleeps for SLEEP_TIME/2 seconds
+    res = sc.api_call(
+          "chat.postMessage",
+          text="@here Reminder to throw your hand up if you haven't yet! ^^ ",
+          channel=channel_ID
+        )
+    time.sleep(SLEEP_TIME/2) # sleeps for SLEEP_TIME/2 seconds
     global lunchers
     global teamMessageTime
     lunchers = get_lunchers(timestamp) # get the list of lunchers that reacted to the post at timestamp
@@ -61,7 +67,7 @@ def launch_team_bandit():
 def post_initial_message():
     res = sc.api_call(
       "chat.postMessage",
-      text="Dearest hungry Raveliners, raise thy hand for lunch!",
+      text="@here Dearest hungry Raveliners, raise thy hand for lunch!",
       channel=channel_ID
     )
     timestamp = res['message']['ts']
