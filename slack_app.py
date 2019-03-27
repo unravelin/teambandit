@@ -53,7 +53,7 @@ def launch_team_bandit():
     time.sleep(SLEEP_TIME/2) # sleeps for SLEEP_TIME/2 seconds
     res = sc.api_call(
           "chat.postMessage",
-          text="@here Reminder to throw your hand up if you haven't yet! ^^ ",
+          text="Reminder to throw your hand up if you haven't yet! ^^ ",
           channel=channel_ID
         )
     time.sleep(SLEEP_TIME/2) # sleeps for SLEEP_TIME/2 seconds
@@ -67,7 +67,7 @@ def launch_team_bandit():
 def post_initial_message():
     res = sc.api_call(
       "chat.postMessage",
-      text="@here Dearest hungry Raveliners, raise thy hand for lunch!",
+      text="Dearest hungry Raveliners, raise thy hand for lunch!",
       channel=channel_ID
     )
     timestamp = res['message']['ts']
