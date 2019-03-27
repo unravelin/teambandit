@@ -6,6 +6,7 @@ import json
 from flask import Flask, request, Response
 import math
 import threading
+from datetime import datetime
 
 app = Flask(__name__)
 
@@ -17,7 +18,7 @@ channel_ID=""
 
 teamSize = 2 # should be 5
 
-SLEEP_TIME = 600
+SLEEP_TIME = 60
 
 teamMessageTime = 0
 
@@ -25,15 +26,19 @@ lunchers = []
 
 stringTeamList = ""
 
+threadMap = {}
+
+
 @app.route('/teambandit', methods=['POST'])
 def teambandit():
-    global channel_ID
-    global teamMessageTime
-    teamMessageTime = 0
     channel_ID = request.form['channel_id']
-    thread1 = threading.Thread(target=launch_team_bandit)
+    # Create a dict that we're passing along
+    message = {'channel_id': channel_ID}
+    thread1 = threading.Thread(target=launch_team_bandit, args=(message,))
     thread1.start()
-    
+    thread2 = threading.Thread(target=cleanupMap)
+    thread2.start()
+
     return Response('Team Bandit has entered the building...')
 
 
@@ -42,29 +47,30 @@ def webhook():
     global lunchers
     global teamMessageTime
     payload = json.loads(request.form["payload"])
+    timestamp = payload['container']['message_ts']
+    message = threadMap[timestamp]
     if (payload['actions'][0].get('action_id') == 'finalise'):
-        update_message("Teams finalised! Bon apetit :shallow_pan_of_food:", teamMessageTime)
+        update_message("Teams finalised! Bon apetit :shallow_pan_of_food:", message)
     if (payload['actions'][0].get('action_id') == 'regenerate'):
-        teamMessageTime = generate_teams(lunchers, teamSize)
+        teamMessageTime = generate_teams(threadMap[timestamp])
     return Response(status=200) 
 
-def launch_team_bandit():
-    timestamp = post_initial_message()
+def launch_team_bandit(message):
+    timestamp = post_initial_message(message['channel_id'])
+    message['initial_message'] = timestamp
     time.sleep(SLEEP_TIME/2) # sleeps for SLEEP_TIME/2 seconds
-    res = sc.api_call(
+    sc.api_call(
           "chat.postMessage",
           text="Reminder to throw your hand up if you haven't yet! ^^ ",
-          channel=channel_ID
+          channel=message['channel_id']
         )
     time.sleep(SLEEP_TIME/2) # sleeps for SLEEP_TIME/2 seconds
-    global lunchers
-    global teamMessageTime
-    lunchers = get_lunchers(timestamp) # get the list of lunchers that reacted to the post at timestamp
-    teamMessageTime = generate_teams(lunchers, teamSize) # Print the teams, and return the time - updating the global teamMessageTime variable
+    message['lunchers'] = get_lunchers(message) # get the list of lunchers that reacted to the post at timestamp
+    timestamp = generate_teams(message) # Print the teams, and return the time - updating the global teamMessageTime variable
+    message['teamMessageTime'] = timestamp
+    threadMap[timestamp] = message
 
-
-
-def post_initial_message():
+def post_initial_message(channel_ID):
     res = sc.api_call(
       "chat.postMessage",
       text="Dearest hungry Raveliners, raise thy hand for lunch!",
@@ -73,34 +79,33 @@ def post_initial_message():
     timestamp = res['message']['ts']
     return timestamp
 
-def update_message(message, time):
-    global stringTeamList
+def update_message(upd, message):
     jsonList = [{
             "type": "section",
             "text": {
                 "type": "mrkdwn",
-                "text": "Teams are as follows:"  + ", ".join(stringTeamList)
+                "text": "Teams are as follows:"  + ", ".join(message['team_list'])
             }
         },
         {
             "type": "section",
             "text": {
                 "type": "mrkdwn",
-                "text": ""  + message
+                "text": ""  + upd
             }
         }]
     res = sc.api_call(
-      "chat.update",
-      ts = time,
-      channel=channel_ID,
-      blocks=json.dumps(jsonList)
+    "chat.update",
+    ts = message['teamMessageTime'],
+    channel=message['channel_id'],
+    blocks=json.dumps(jsonList)
     )
 
-def get_lunchers(messageTime):
+def get_lunchers(message):
     reactions = sc.api_call(
        "reactions.get",
-       timestamp=messageTime,
-       channel=channel_ID,
+       timestamp=message['initial_message'],
+       channel=message['channel_id'],
        full=1
      )
 
@@ -109,7 +114,6 @@ def get_lunchers(messageTime):
     except KeyError:
         print ('sorry, no lunch')
         return []
-
 
     users = []
 
@@ -125,22 +129,21 @@ def get_lunchers(messageTime):
     return list(set(usersNoMatrix))
 
 
-def generate_teams(uniqueUserList, teamSize):
+def generate_teams(message):
     #randomize the list
-    shuffle(uniqueUserList)
-
-    global teamMessageTime
-    global stringTeamList
+    
+    shuffle(message['lunchers'])
 
     name_list = []
     # turn userID list into a list of names
-    for user_ID in uniqueUserList:
+    for user_ID in message['lunchers']:
         name_list.append(get_name_from_userid(user_ID))
 
     # teamList = samsSolution(name_list, teamSize)
-    teamList = astridsSolution(name_list, teamSize)
+    teamList = astridsSolution(name_list)
 
     stringTeamList = [str(teams) for teams in teamList]
+    message['team_list'] = stringTeamList
 
     jsonList = [{
             "type": "section",
@@ -182,10 +185,10 @@ def generate_teams(uniqueUserList, teamSize):
             }
         }]
 
-    if (teamMessageTime == 0):
+    if ('teamMessageTime' not in message):
         res = sc.api_call(
           "chat.postMessage",
-          channel=channel_ID,
+          channel=message['channel_id'],
           blocks=json.dumps(jsonList)
         )
         timestamp = res['message']['ts']
@@ -193,8 +196,8 @@ def generate_teams(uniqueUserList, teamSize):
     else:
         res = sc.api_call(
           "chat.update",
-          channel=channel_ID,
-          ts = teamMessageTime,
+          channel=message['channel_id'],
+          ts = message['teamMessageTime'],
           blocks=json.dumps(jsonList)
         )
         timestamp = res['ts']
@@ -230,17 +233,17 @@ def samsSolution(userList, teamSize):
 
         return teamList
 
-def astridsSolution(group_list, team_size):
-    if (len(group_list) <= team_size): # if there's less than a single team, just return the list
+def astridsSolution(group_list):
+    if (len(group_list) <= teamSize): # if there's less than a single team, just return the list
         return [group_list]
     else:
 
         group_size = len(group_list)
 
-        team_number = math.ceil(group_size/team_size) # We want that many teams
+        team_number = math.ceil(group_size/teamSize) # We want that many teams
 
         # This transitional number is important to work our how many teams will have fewer people
-        top_group = team_number*team_size
+        top_group = team_number*teamSize
         # Now we know. there will be {smaller_teams} teams with fewer people
         smaller_teams = top_group - group_size
 
@@ -248,10 +251,10 @@ def astridsSolution(group_list, team_size):
         normal_teams = team_number - smaller_teams
 
         # sanity check?
-        is_that_the_total = smaller_teams*(team_size-1)+ normal_teams*team_size
+        is_that_the_total = smaller_teams*(teamSize-1)+ normal_teams*teamSize
 
 
-        print("{} teams with {} members and {} teams with {} members = {}".format(normal_teams, team_size, smaller_teams, team_size-1, is_that_the_total))
+        print("{} teams with {} members and {} teams with {} members = {}".format(normal_teams, teamSize, smaller_teams, teamSize-1, is_that_the_total))
 
         ##### Ok, how do we generate those teams?
 
@@ -263,20 +266,26 @@ def astridsSolution(group_list, team_size):
             # If there should be 4 teams of X, we do this 4 times
             for i in range(0, normal_teams):
                 # We take a chunk of the main list
-                team = group_list[j:j+team_size]
+                team = group_list[j:j+teamSize]
                 # append a list with that chunk to the list list
                 teams.append(team)
                 # increment j to take the next chunk
-                j += team_size
+                j += teamSize
 
         if smaller_teams > 0:
             # If there should be 3 teams of X-1, we do this 3 times
             for i in range (0, smaller_teams):
-                team = group_list[j:j+team_size-1]
+                team = group_list[j:j+teamSize-1]
                 teams.append(team)
-                j += team_size-1
+                j += teamSize-1
             
         return teams
+
+def cleanupMap():
+    for ts in threadMap:
+        dt = datetime.fromtimestamp(int(ts))
+        if dt < datetime.now() - datetime.day:
+            del threadMap[ts]
 
 def get_name_from_userid(userID):
     userInfo = sc.api_call("users.info", user = userID)
