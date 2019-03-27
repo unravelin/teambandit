@@ -15,9 +15,9 @@ sc = SlackClient(slack_token)
 
 channel_ID=""
 
-teamSize = 5 # should be 5
+teamSize = 2 # should be 5
 
-SLEEP_TIME = 10
+SLEEP_TIME = 600
 
 teamMessageTime = 0
 
