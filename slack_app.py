@@ -14,17 +14,9 @@ slack_token = os.environ["SLACK_API_TOKEN"]
 
 sc = SlackClient(slack_token)
 
-channel_ID=""
+teamSize = 5 # should be 5
 
-teamSize = 2 # should be 5
-
-SLEEP_TIME = 60
-
-teamMessageTime = 0
-
-lunchers = []
-
-stringTeamList = ""
+SLEEP_TIME = 600
 
 threadMap = {}
 
@@ -44,8 +36,6 @@ def teambandit():
 
 @app.route('/webhook', methods=['POST'])
 def webhook():
-    global lunchers
-    global teamMessageTime
     payload = json.loads(request.form["payload"])
     timestamp = payload['container']['message_ts']
     message = threadMap[timestamp]
@@ -61,7 +51,7 @@ def launch_team_bandit(message):
     time.sleep(SLEEP_TIME/2) # sleeps for SLEEP_TIME/2 seconds
     sc.api_call(
           "chat.postMessage",
-          text="Reminder to throw your hand up if you haven't yet! ^^ ",
+          text="<!channel> Reminder to throw your hand up if you haven't yet! ^^ ",
           channel=message['channel_id']
         )
     time.sleep(SLEEP_TIME/2) # sleeps for SLEEP_TIME/2 seconds
@@ -73,7 +63,7 @@ def launch_team_bandit(message):
 def post_initial_message(channel_ID):
     res = sc.api_call(
       "chat.postMessage",
-      text="Dearest hungry Raveliners, raise thy hand for lunch!",
+      text="<!channel> Dearest hungry Raveliners, raise thy hand for lunch!",
       channel=channel_ID
     )
     timestamp = res['message']['ts']
@@ -84,7 +74,7 @@ def update_message(upd, message):
             "type": "section",
             "text": {
                 "type": "mrkdwn",
-                "text": "Teams are as follows:"  + ", ".join(message['team_list'])
+                "text": "<!channel> Teams are as follows: "  + ", ".join(message['team_list'])
             }
         },
         {
