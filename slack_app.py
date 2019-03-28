@@ -238,10 +238,10 @@ def astridsSolution(group_list):
 
         for i, luncher in enumerate(group_list):
             if i < team_number:
-            teams[i].append(luncher)
+                teams[i].append(luncher)
             else:
-            m = i % team_number
-            teams[m].append(luncher)
+                m = i % team_number
+                teams[m].append(luncher)
 
         return teams
 
