@@ -74,7 +74,7 @@ def update_message(upd, message):
             "type": "section",
             "text": {
                 "type": "mrkdwn",
-                "text": "<!channel> Teams are as follows: "  + ", ".join(message['team_list'])
+                "text": "<!here> Teams are as follows: "  + ", ".join(message['team_list'])
             }
         },
         {
@@ -129,8 +129,8 @@ def generate_teams(message):
     for user_ID in message['lunchers']:
         name_list.append(get_name_from_userid(user_ID))
 
-    teamList = samsSolution(name_list, teamSize)
-    # teamList = astridsSolution(name_list)
+    # teamList = samsSolution(name_list, teamSize)
+    teamList = astridsSolution(name_list)
 
     stringTeamList = [str(teams) for teams in teamList]
     message['team_list'] = stringTeamList
@@ -232,44 +232,21 @@ def astridsSolution(group_list):
 
         team_number = math.ceil(group_size/teamSize) # We want that many teams
 
-        # This transitional number is important to work our how many teams will have fewer people
-        top_group = team_number*teamSize
-        # Now we know. there will be {smaller_teams} teams with fewer people
-        smaller_teams = top_group - group_size
-
-        # And the rest are normal teams
-        normal_teams = team_number - smaller_teams
-
-        # sanity check?
-        is_that_the_total = smaller_teams*(teamSize-1)+ normal_teams*teamSize
-
-
-        print("{} teams with {} members and {} teams with {} members = {}".format(normal_teams, teamSize, smaller_teams, teamSize-1, is_that_the_total))
-
-        ##### Ok, how do we generate those teams?
-
-        # here's what's going to be an list of lists
         teams = []
-        j = 0
+        for i in range(0, team_number):
+            teams.append([])
 
-        if normal_teams > 0:
-            # If there should be 4 teams of X, we do this 4 times
-            for i in range(0, normal_teams):
-                # We take a chunk of the main list
-                team = group_list[j:j+teamSize]
-                # append a list with that chunk to the list list
-                teams.append(team)
-                # increment j to take the next chunk
-                j += teamSize
+        for i, luncher in enumerate(group_list):
+            if i < team_number:
+            teams[i].append(luncher)
+            else:
+            m = i % team_number
+            teams[m].append(luncher)
 
-        if smaller_teams > 0:
-            # If there should be 3 teams of X-1, we do this 3 times
-            for i in range (0, smaller_teams):
-                team = group_list[j:j+teamSize-1]
-                teams.append(team)
-                j += teamSize-1
-            
         return teams
+
+
+
 
 def cleanupMap():
     for ts in threadMap:
