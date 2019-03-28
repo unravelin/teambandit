@@ -51,7 +51,7 @@ def launch_team_bandit(message):
     time.sleep(SLEEP_TIME/2) # sleeps for SLEEP_TIME/2 seconds
     sc.api_call(
           "chat.postMessage",
-          text="<!channel> Reminder to throw your hand up if you haven't yet! ^^ ",
+          text="<!here> Reminder to throw your hand up if you haven't yet! ^^ ",
           channel=message['channel_id']
         )
     time.sleep(SLEEP_TIME/2) # sleeps for SLEEP_TIME/2 seconds
@@ -63,7 +63,7 @@ def launch_team_bandit(message):
 def post_initial_message(channel_ID):
     res = sc.api_call(
       "chat.postMessage",
-      text="<!channel> Dearest hungry Raveliners, raise thy hand for lunch!",
+      text="<!here> Dearest hungry Raveliners, raise thy hand for lunch!",
       channel=channel_ID
     )
     timestamp = res['message']['ts']
@@ -129,8 +129,8 @@ def generate_teams(message):
     for user_ID in message['lunchers']:
         name_list.append(get_name_from_userid(user_ID))
 
-    # teamList = samsSolution(name_list, teamSize)
-    teamList = astridsSolution(name_list)
+    teamList = samsSolution(name_list, teamSize)
+    # teamList = astridsSolution(name_list)
 
     stringTeamList = [str(teams) for teams in teamList]
     message['team_list'] = stringTeamList
