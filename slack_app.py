@@ -6,7 +6,6 @@ import json
 from flask import Flask, request, Response
 import math
 import threading
-from datetime import datetime
 
 app = Flask(__name__)
 
@@ -28,8 +27,6 @@ def teambandit():
     message = {'channel_id': channel_ID}
     thread1 = threading.Thread(target=launch_team_bandit, args=(message,))
     thread1.start()
-    thread2 = threading.Thread(target=cleanupMap)
-    thread2.start()
 
     return Response('Team Bandit has entered the building...')
 
@@ -76,25 +73,12 @@ def post_initial_message(channel_ID):
     return timestamp
 
 def update_message(upd, message):
-    jsonList = [{
-            "type": "section",
-            "text": {
-                "type": "mrkdwn",
-                "text": "<!here> Teams are as follows: "  + ", ".join(message['team_list'])
-            }
-        },
-        {
-            "type": "section",
-            "text": {
-                "type": "mrkdwn",
-                "text": ""  + upd
-            }
-        }]
+    messageJSON = message['messageJSON'][0:-3]
     res = sc.api_call(
     "chat.update",
     ts = message['teamMessageTime'],
     channel=message['channel_id'],
-    blocks=json.dumps(jsonList)
+    blocks=json.dumps(messageJSON)
     )
 
 def get_lunchers(message):
@@ -138,54 +122,60 @@ def generate_teams(message):
     # teamList = samsSolution(name_list, teamSize)
     teamList = astridsSolution(name_list)
 
-    stringTeamList = [str(teams) for teams in teamList]
-    message['team_list'] = stringTeamList
 
-    jsonList = [{
-            "type": "section",
-            "text": {
-                "type": "mrkdwn",
-                "text": "Teams are as follows:"  + ", ".join(stringTeamList)
-            }
-        },
-        {
-            "type": "section",
-            "text": {
-                "type": "mrkdwn",
-                "text": "Happy with the teams?" 
-            },
-            "accessory": {
-                "type": "button",
-                "text": {
-                    "type": "plain_text",
-                    "text": "Finalise selection",
-                },
-                "value": "finalise_button",
+    messageJSON = 	[{
+		"type": "section",
+		"text": {
+			"type": "mrkdwn",
+			"text": "Teams are as follows:"
+		}
+	}]
+
+    for team in teamList:
+        messageJSON += displayTeam(team)
+
+    messageJSON += [{
+		"type": "divider"
+	},{
+      "type": "section",
+      "text": {
+        "type": "mrkdwn",
+        "text": "Happy with the teams?:"
+      }
+    },{
+		"type": "actions",
+		"elements": [
+			{
+				"type": "button",
+				"text": {
+					"type": "plain_text",
+					"emoji": True,
+					"text": "Finalise selection"
+				},
+				"value": "finalise_button",
                 "action_id": "finalise"
-            }
-        },
-        {
-            "type": "section",
-            "text": {
-                "type": "mrkdwn",
-                "text": "Teams not random enough?"
-            },
-            "accessory": {
-                "type": "button",
-                "text": {
-                    "type": "plain_text",
-                    "text": "Re-generate Teams!",
-                },
-                "value": "regenerate_button",
+			},
+			{
+				"type": "button",
+				"text": {
+					"type": "plain_text",
+					"emoji": True,
+					"text": "Regenerate"
+				},
+				"value": "regenerate_button",
                 "action_id": "regenerate"
-            }
-        }]
+			}
+		]
+	}]
+
+    message['messageJSON'] = messageJSON
 
     if ('teamMessageTime' not in message):
+        el = json.dumps(messageJSON)
         res = sc.api_call(
           "chat.postMessage",
           channel=message['channel_id'],
-          blocks=json.dumps(jsonList)
+          blocks=json.dumps(messageJSON)
         )
         timestamp = res['message']['ts']
         return(timestamp)
@@ -194,10 +184,29 @@ def generate_teams(message):
           "chat.update",
           channel=message['channel_id'],
           ts = message['teamMessageTime'],
-          blocks=json.dumps(jsonList)
+          blocks=json.dumps(messageJSON)
         )
         timestamp = res['ts']
         return(timestamp)
+
+
+
+def displayTeam(team):
+    nameList = []
+    for person in team:
+        nameList.append({
+				"type": "plain_text",
+				"text": person,
+				"emoji": True
+			})
+    return [{
+		"type": "divider"
+	},
+	{
+		"type": "section",
+		"fields": nameList
+	}]
+
 
 
 def samsSolution(userList, teamSize):
@@ -251,54 +260,13 @@ def astridsSolution(group_list):
 
         return teams
 
-
-
-
-def cleanupMap():
-    for ts in threadMap:
-        dt = datetime.fromtimestamp(int(ts))
-        if dt < datetime.now() - datetime.day:
-            del threadMap[ts]
-
 def get_name_from_userid(userID):
     userInfo = sc.api_call("users.info", user = userID)
     return  userInfo['user']['profile'].get('real_name')
 
-def astridTestsThings():
-    teams = [['cgark', 'bhavu', 'dawb'], ['sam', 'astrid', 'katrina'], ['alice', 'ji', 'mark']]
-
-    dividerObject = {"type": "divider"}
-    introObject = {"type": "section", "text": {
-                "type": "mrkdwn",
-                "text": "Here are the teams:"
-            }}
-
-    teamsObjects = [dividerObject, introObject]
-
-    for team in teams:
-      fields = []
-      for user in team:
-        fields.append({
-                    "type": "plain_text",
-                    "text": user,
-                    "emoji": True
-                })
-      teamsObjects.append(dividerObject)
-      teamsObjects.append({
-            "type": "section",
-            "fields": fields
-        })
-    res = sc.api_call(
-      "chat.postMessage",
-      channel=channel_ID,
-      blocks=json.dumps(teamsObjects)
-    )
-
-    print(json.dumps(teamsObjects))
-
 if __name__ == '__main__':  
     port = int(os.environ.get("PORT", 8080))
-    app.run(host='0.0.0.0', port=port)
+    app.run(host='0.0.0.0', port=8080)
 
 
 
