@@ -16,7 +16,7 @@ sc = SlackClient(slack_token)
 
 teamSize = 5 # should be 5
 
-SLEEP_TIME = 1799
+SLEEP_TIME = 3600
 
 threadMap = {}
 
@@ -48,13 +48,19 @@ def webhook():
 def launch_team_bandit(message):
     timestamp = post_initial_message(message['channel_id'])
     message['initial_message'] = timestamp
-    time.sleep(SLEEP_TIME/2) # sleeps for SLEEP_TIME/2 seconds
+    time.sleep(SLEEP_TIME/3) # sleeps for SLEEP_TIME/3 seconds
     sc.api_call(
           "chat.postMessage",
-          text="<!here> Reminder to throw your hand up if you haven't yet! ^^ ",
+          text="Reminder to throw your hand up if you haven't yet! ^^ ",
           channel=message['channel_id']
         )
-    time.sleep(SLEEP_TIME/2) # sleeps for SLEEP_TIME/2 seconds
+    time.sleep(SLEEP_TIME/3) # sleeps for SLEEP_TIME/3 seconds
+        sc.api_call(
+          "chat.postMessage",
+          text="<!here> Final reminder - don't go lunchless!",
+          channel=message['channel_id']
+        )
+    time.sleep(SLEEP_TIME/3) # sleeps for SLEEP_TIME/3 seconds
     message['lunchers'] = get_lunchers(message) # get the list of lunchers that reacted to the post at timestamp
     timestamp = generate_teams(message) # Print the teams, and return the time - updating the global teamMessageTime variable
     message['teamMessageTime'] = timestamp
