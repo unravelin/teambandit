@@ -16,7 +16,7 @@ sc = SlackClient(slack_token)
 
 teamSize = 5 # should be 5
 
-SLEEP_TIME = 3600
+SLEEP_TIME = 1799
 
 threadMap = {}
 
