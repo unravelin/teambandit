@@ -55,7 +55,7 @@ def launch_team_bandit(message):
           channel=message['channel_id']
         )
     time.sleep(SLEEP_TIME/3) # sleeps for SLEEP_TIME/3 seconds
-        sc.api_call(
+    sc.api_call(
           "chat.postMessage",
           text="<!here> Final reminder - don't go lunchless!",
           channel=message['channel_id']
