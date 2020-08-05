@@ -13,7 +13,7 @@ slack_token = os.environ["SLACK_API_TOKEN"]
 
 sc = SlackClient(slack_token)
 
-teamSize = 5 # should be 5
+teamSize = 6 # should be 6
 
 SLEEP_TIME = 3600
 
