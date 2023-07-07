@@ -1,4 +1,11 @@
+# Deprecation notice
+
+**This project has been folded into [unravelin/slack-bandits](https://github.com/unravelin/slack-bandits).**
+
+---
+
 # teambandit
+
 Teambandit is a slackbot to easily generate random teams for lunch.
 
 Usage: enter /teambandit in slack. The app will wait an hour before generating teams based on the users that have reacted with emojis to the original message.
